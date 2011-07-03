@@ -113,7 +113,10 @@
 (def routes
   (app
    [""] index
-   ["threads"] threads))
+   ["threads"] threads
+   ["wait"] (fn [req]
+              (Thread/sleep 500)
+              (render :text "ok!"))))
 
 (defn wrap-exceptions [h]
   (fn [r]

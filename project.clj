@@ -2,5 +2,5 @@
   :description "Heroku Benchmarking Webapp"
   :dependencies [[org.clojure/clojure "1.2.1"]
                  [org.clojure/clojure-contrib "1.2.0"]
-                 [nsfw "0.2.3"]]
+                 [nsfw "0.2.4"]]
   :dev-dependencies [[swank-clojure "1.2.0"]])

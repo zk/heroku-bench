@@ -3,5 +3,7 @@
             [nsfw.server :as server]))
 
 (defn -main []
-  (-> (server/make core/entry-handler :port (Integer/parseInt (get (System/getenv) "PORT" "8080")))
+  (-> (server/make core/entry-handler
+                   :port (Integer/parseInt (get (System/getenv) "PORT" "8080"))
+                   :max-threads 20)
       server/start))
