@@ -82,7 +82,7 @@
   (fn [r]
     (try
       (h r)
-      (catch Exception e
+      (catch Throwable e
         (println "--- Last snapshot ---")
         (println (first @snapshots))
         (println (.getMessage e))
