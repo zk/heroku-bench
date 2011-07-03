@@ -70,20 +70,24 @@
       (map render-snapshot (rest snapshots))]]]))
 
 (defn index [req]
-  (try
-    (doseq [x (range 1)]
-      (spawn-thread))
-    (render index-tpl @snapshots)
-    (catch Exception e
-      (println "--- Last snapshot ---")
-      (println (first @snapshots))
-      (println (.getMessage e))
-      (println "---------------------")
-      (println))))
+  (doseq [x (range 1)]
+    (spawn-thread))
+  (render index-tpl @snapshots))
 
 (def routes
   (app
    [""] index))
+
+(defn wrap-exceptions [h]
+  (fn [r]
+    (try
+      (h r)
+      (catch Exception e
+        (println "--- Last snapshot ---")
+        (println (first @snapshots))
+        (println (.getMessage e))
+        (println "---------------------")
+        (println)))))
 
 (def entry-handler
   (-> routes
@@ -91,7 +95,8 @@
       wrap-nested-params
       wrap-params
       (wrap-file "resources/public")
-      wrap-file-info))
+      wrap-file-info
+      wrap-exceptions))
 
 #_(defonce s (server/make entry-handler :port 3000))
 #_(server/start s)
