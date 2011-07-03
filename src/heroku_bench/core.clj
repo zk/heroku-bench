@@ -31,15 +31,15 @@
 (defn gen-snapshot []
   (let [threads (Thread/getAllStackTraces)
         count (count (keys threads))]
-    {:threads {:dump threads
-               :count count}
+    {:threads {:count count}
      :mem (mem-usage)
      :timestamp (System/currentTimeMillis)}))
 
 (defn spawn-thread []
   (future (while true
             (Thread/sleep 100000000)))
-  (swap! snapshots (fn [coll] (cons (gen-snapshot) coll))))
+  (swap! snapshots (fn [coll]
+                     (take 10 (cons (gen-snapshot) coll)))))
 
 (defn render-snapshot [snapshot]
   (let [timestamp (:timestamp snapshot)]
@@ -48,35 +48,53 @@
       [:td timestamp]
       [:td (str (dissoc snapshot :timestamp))]])))
 
-(defn index-tpl [snapshots]
+(defn main [& body]
   (html
    (doctype :html5)
    [:html
     [:head
      [:title "heroku-bench"]]
     [:body
-     [:h1 "Heroku Bench"]
-     [:p
-      "Benchmarking proggy for Heroku.  Project at "
-      [:a {:href "http://github.com/zkim/heroku-bench"}
-       "http://github.com/zkim/heroku-bench"]
-      "."]
-     [:h2 "Snapshots"]
-     [:table
-      [:tr
-       [:td "Current"]]
-      (render-snapshot (first snapshots))
-      [:tr [:td "History"]]
-      (map render-snapshot (rest snapshots))]]]))
+     body]]))
 
-(defn index [req]
+
+(defn index-tpl []
+  (main
+   [:h1 "Heroku Bench"]
+   [:a {:href "/"} "home"]
+   [:p
+    "JVM benchmarking proggy for Heroku.  Project at "
+    [:a {:href "http://github.com/zkim/heroku-bench"}
+     "http://github.com/zkim/heroku-bench"]
+    "."]
+   [:ul
+    [:li [:a {:href "/threads"} "threads"]]
+    #_[:li [:a {:href "/mem"} "memory"]]]))
+
+(defn threads-tpl [snapshots]
+  (main
+   [:h1 "Heroku Bench"]
+   [:h2 "Threads"]
+   [:p "Hit reload till something happens."]
+   [:table
+    [:tr
+     [:td [:em "Current"]]]
+    (render-snapshot (first snapshots))
+    [:tr [:td [:em "History"]]]
+    (map render-snapshot (rest snapshots))]))
+
+(defn threads [req]
   (doseq [x (range 1)]
     (spawn-thread))
-  (render index-tpl @snapshots))
+  (render threads-tpl @snapshots))
+
+(defn index [req]
+  (render index-tpl))
 
 (def routes
   (app
-   [""] index))
+   [""] index
+   ["threads"] threads))
 
 (defn wrap-exceptions [h]
   (fn [r]
@@ -97,6 +115,3 @@
       (wrap-file "resources/public")
       wrap-file-info
       wrap-exceptions))
-
-#_(defonce s (server/make entry-handler :port 3000))
-#_(server/start s)
