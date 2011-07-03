@@ -41,12 +41,27 @@
   (swap! snapshots (fn [coll]
                      (take 10 (cons (gen-snapshot) coll)))))
 
+;; Snippets
+
 (defn render-snapshot [snapshot]
   (let [timestamp (:timestamp snapshot)]
     (html
      [:tr
       [:td timestamp]
       [:td (str (dissoc snapshot :timestamp))]])))
+
+(defn render-system-properties []
+  (let [sys-props (System/getProperties)
+        keys (sort (.keySet sys-props))]
+    #_(reduce #(assoc %1 (keyword %2) (.getProperty sys-props %2)) {} keys)
+    [:table
+     (map #(html [:tr
+                  [:td %]
+                  [:td (.getProperty sys-props %)]])
+          keys)]))
+
+
+;; Templates
 
 (defn main [& body]
   (html
@@ -57,19 +72,23 @@
     [:body
      body]]))
 
-
 (defn index-tpl []
   (main
    [:h1 "Heroku Bench"]
    [:a {:href "/"} "home"]
    [:p
-    "JVM benchmarking proggy for Heroku.  Project at "
+    "Benchmarking proggy for Heroku JVMs."
+    " Project at "
     [:a {:href "http://github.com/zkim/heroku-bench"}
      "http://github.com/zkim/heroku-bench"]
     "."]
    [:ul
     [:li [:a {:href "/threads"} "threads"]]
-    #_[:li [:a {:href "/mem"} "memory"]]]))
+    #_[:li [:a {:href "/mem"} "memory"]]]
+   [:br]
+   [:br]
+   [:h2 "System Properties"]
+   (render-system-properties)))
 
 (defn threads-tpl [snapshots]
   (main
